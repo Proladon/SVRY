@@ -1,22 +1,28 @@
 <template>
-    <div id="report-template">
-        <p>{{report}}</p>
-    </div>
+  <div id="report-template">
+    <pre class="preview">{{template}}</pre>
+  </div>
 </template>
 
 <script>
 import { defineComponent } from "vue";
 import axios from "axios";
+
 export default defineComponent({
-  name: "ReportTemplate",
-    props: ['report']
+    name: "ReportTemplate",
+    props: ['template'],
     
 });
 </script>
 
 <style lang="scss" scoped>
-#report-template{
-    height: 100%;
-    background-color: var(--secondary-gray);
+#report-template {
+  height: 100%;
+  background-color: var(--secondary-gray);
+}
+
+.preview{
+    padding: 15px;
+    text-align: left;
 }
 </style>

@@ -42,13 +42,13 @@
             </div>
         </vue-final-modal>
 
-        <splide :options="options" @splide:dragged="dragged">
+        <splide :options="options" @splide:dragged="dragged" @splide:pagination:updated="changeView">
             <splide-slide>
                 
                 <Status :state="reportState" :info="info" />
             </splide-slide>
             <splide-slide>
-                <ReportTemplate :report="reportState" />
+                <ReportTemplate :template="template" />
             </splide-slide>
         </splide>
     </div>
@@ -81,6 +81,7 @@ export default defineComponent({
         const timePeriod = ref('')
         const today = ref(date.format(new Date(), 'YYYY/MM/DD'))
         const when = ref('')
+        const template = ref('')
 
         // Modal
         const showModal = ref(false);
@@ -163,6 +164,23 @@ export default defineComponent({
 
         const dragged = () => {
             refreshAPI();
+
+            axios({
+                method: "post",
+                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
+                data: {
+                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
+                    when: when.value,
+                },
+            }).then(res=>{
+                template.value = res.data
+                    .replaceAll('<strong style="background-color: gray;">', '')
+                    .replaceAll('</strong>', '')
+            })
+        }
+
+        const changeView = (data)=>{
+            console.log(data)
         }
 
         onMounted(() => {
@@ -208,9 +226,11 @@ export default defineComponent({
             reportState,
             refreshAPI,
             report,
+            template,
             dragged,
             timePeriod,
             options,
+            changeView
         };
     },
 });
