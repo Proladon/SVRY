@@ -1,4 +1,4 @@
 module.exports = {
-  publicPath: '/SVRY/',
+  publicPath: '/SVRY.io/',
   outputDir: 'docs'
 }
