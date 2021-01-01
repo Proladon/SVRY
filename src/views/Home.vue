@@ -62,6 +62,7 @@ import axios from "axios";
 import date from 'date-and-time';
 import { useToast, TYPE  } from "vue-toastification";
 import { Splide, SplideSlide } from '@splidejs/vue-splide';
+import copy from 'copy-to-clipboard';
 import '@splidejs/splide/dist/css/themes/splide-default.min.css';
 
 export default defineComponent({
@@ -105,8 +106,9 @@ export default defineComponent({
             pagination: true,
             padding: 0,
             gap: 50,
-            
         }
+
+        const slide = ref(0)
         
 
         const refreshAPI = () => {
@@ -141,6 +143,7 @@ export default defineComponent({
             if (health.fever){doing += ' 有發燒'}
             if (health.hospital){doing += ' 有住院'}
             if (health.getCool){doing += ' 有感冒'}
+            else{doing += ' 無發燒無感冒'}
 
             // Posting API
             axios({
@@ -180,7 +183,7 @@ export default defineComponent({
         }
 
         const changeView = (data)=>{
-            console.log(data)
+            slide.value = data._i
         }
 
         onMounted(() => {
@@ -230,7 +233,8 @@ export default defineComponent({
             dragged,
             timePeriod,
             options,
-            changeView
+            changeView,
+            slide
         };
     },
 });
