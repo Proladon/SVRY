@@ -11,32 +11,19 @@
         <div class="report-btn" @click="showModal = true">
             <span>Report</span>
         </div>
-        <Status :state="reportState" :info="info" />
+        
+        <!-- <Status :state="reportState" :info="info" /> -->
 
         <!-- Report Modal -->
-        <vue-final-modal
-            v-model="showModal"
-            classes="modal-container"
-            content-class="modal-content"
-        >
+        <vue-final-modal v-model="showModal" classes="modal-container" content-class="modal-content">
             Report form
 
-            <input
-                type="text"
-                id="tagNum"
-                class="user-input"
-                placeholder="You're number"
-            />
-            <input
-                type="text"
-                id="doing"
-                class="user-input"
-                placeholder="What you are doing?"
-            />
+            <input type="text" id="tagNum" class="user-input" placeholder="You're number" />
+            <input type="text" id="doing" class="user-input" placeholder="What you are doing?" />
 
             <!-- Check Box -->
             <div class="check-box-wrapper">
-                <input type="checkbox" name="fever" v-model="health.fever"/>
+                <input type="checkbox" name="fever" v-model="health.fever" />
                 <label for="fever">發燒</label>
 
                 <input type="checkbox" name="hospital" v-model="health.hospital" />
@@ -50,27 +37,39 @@
                 <button class="vfm-btn" @click="report">confirm</button>
             </div>
         </vue-final-modal>
+
+        <splide :options="options" @splide:dragged="dragged">
+            <splide-slide>
+                <Status :state="reportState" :info="info" />
+            </splide-slide>
+            <splide-slide>
+                <ReportTemplate :report="reportState" />
+            </splide-slide>
+        </splide>
     </div>
 </template>
 
 <script>
 import { defineComponent, onMounted, reactive, ref } from "vue";
 import Status from "@/components/Status.vue";
+import ReportTemplate from "@/components/ReportTemplate.vue";
 import axios from "axios";
 import { useToast, TYPE  } from "vue-toastification";
+import { Splide, SplideSlide } from '@splidejs/vue-splide';
+import '@splidejs/splide/dist/css/themes/splide-default.min.css';
+
 export default defineComponent({
     name: "Home",
-    components: { Status },
+    components: { 
+        Status,
+        Splide,
+        SplideSlide,
+        ReportTemplate
+    },
 
     setup() {
+        // Toast Notification init
         const toast = useToast();
-        
-        
-        
-        // toast.success("My toast content", {
-        //         timeout: 2000
-        //     });
-
 
         const health = reactive({
             fever: false,
@@ -85,7 +84,10 @@ export default defineComponent({
             reported: 0,
             unreported: 0,
         });
-
+        const options = {
+            arrows: false,
+            pagination: false
+        }
         const tt = ()=>{
             setTimeout(() => {
                 console.log(health.fever)
@@ -114,7 +116,14 @@ export default defineComponent({
 
         const report = () => {
             const tagNum = document.getElementById("tagNum").value;
-            const doing = document.getElementById("doing").value;
+            let doing = document.getElementById("doing").value;
+
+            // Checking health
+            if (health.fever){doing += ' 有發燒'}
+            if (health.hospital){doing += ' 有住院'}
+            if (health.getCool){doing += ' 有感冒'}
+
+            // Posting API
             axios({
                 method: "post",
                 url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
@@ -125,7 +134,7 @@ export default defineComponent({
                     what: doing,
                 },
             }).then((res) => {
-                console.log(res.data);
+                
                 refreshAPI();
                 toast("Report success!", {
                         type: TYPE.SUCCESS 
@@ -134,9 +143,12 @@ export default defineComponent({
             });
         };
 
+        const dragged = () => {
+            refreshAPI();
+        }
+
         onMounted(() => {
             refreshAPI();
-            
         });
 
         return {
@@ -148,7 +160,9 @@ export default defineComponent({
             reportState,
             refreshAPI,
             report,
+            dragged,
             today,
+            options,
         };
     },
 });
