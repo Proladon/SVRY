@@ -1,4 +1,5 @@
 <template>
+    
     <div id="Status">
         <div class="status-tag" v-for="(p, index) in state" :key="p.tag">
             <div class="tag-content">
@@ -44,9 +45,6 @@ import { defineComponent, props } from 'vue';
             .color-tag {
                 width: 10%;
                 height: 100%;
-
-
-
             }
 
             .name-tag {

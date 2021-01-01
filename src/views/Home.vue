@@ -6,11 +6,15 @@
             <div class="classes head-bar-item"><span>Class 4</span></div>
         </div>
 
-        <p class="last-report">Last Report: 2020 / 12 / 27 14:26</p>
-
+        <p class="now-time-period">{{timePeriod}}</p>
+        
+        <!-- Report Button -->
         <div class="report-btn" @click="showModal = true">
             <span>Report</span>
         </div>
+
+        <p class="last-report">reported: {{info.reported}} / un-reported: {{info.unreported}}</p>
+
         
         <!-- <Status :state="reportState" :info="info" /> -->
 
@@ -40,6 +44,7 @@
 
         <splide :options="options" @splide:dragged="dragged">
             <splide-slide>
+                
                 <Status :state="reportState" :info="info" />
             </splide-slide>
             <splide-slide>
@@ -54,6 +59,7 @@ import { defineComponent, onMounted, reactive, ref } from "vue";
 import Status from "@/components/Status.vue";
 import ReportTemplate from "@/components/ReportTemplate.vue";
 import axios from "axios";
+import date from 'date-and-time';
 import { useToast, TYPE  } from "vue-toastification";
 import { Splide, SplideSlide } from '@splidejs/vue-splide';
 import '@splidejs/splide/dist/css/themes/splide-default.min.css';
@@ -71,38 +77,50 @@ export default defineComponent({
         // Toast Notification init
         const toast = useToast();
 
-        const health = reactive({
-            fever: false,
-            hospital: false,
-            getCool: false
-        })
-        const today = ref(new Date())
+        // Time
+        const timePeriod = ref('')
+        const today = ref(date.format(new Date(), 'YYYY/MM/DD'))
+        const when = ref('')
+
+        // Modal
         const showModal = ref(false);
+
+        // Report
         const reportState = ref(null);
         const info = reactive({
             total: 0,
             reported: 0,
             unreported: 0,
         });
+        const health = reactive({
+            fever: false,
+            hospital: false,
+            getCool: false
+        })
+
+        // Splide
         const options = {
             arrows: false,
-            pagination: false
+            pagination: true,
+            padding: 0,
+            gap: 50,
+            
         }
-        const tt = ()=>{
-            setTimeout(() => {
-                console.log(health.fever)
-            });
-        }
+        
 
         const refreshAPI = () => {
+            
             axios({
                 method: "post",
                 url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
-                    when: "109/12/31 2130回報",
+                    when: when.value,
                 },
             }).then((res) => {
+                info.total = 0
+                info.reported = 0
+                info.unreported = 0
                 for (const i in res.data) {
                     info.total += 1;
                     if (res.data[i] !== "尚未回覆") {
@@ -129,14 +147,14 @@ export default defineComponent({
                 url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
-                    when: "109/12/31 2130回報",
+                    when: when.value,
                     who: tagNum,
                     what: doing,
                 },
             }).then((res) => {
                 
                 refreshAPI();
-                toast("Report success!", {
+                toast(tagNum + " Report success!", {
                         type: TYPE.SUCCESS 
                     })
                 showModal.value = false;
@@ -148,11 +166,41 @@ export default defineComponent({
         }
 
         onMounted(() => {
+            
+            // '109/12/31 2130回報'
+            const now = new Date()
+            const hours = now.getHours()
+            const year = date.format(now, 'YYYY') - 1911
+
+
+            const checkTime = ()=>{
+                
+                if (hours > 9){
+                    timePeriod.value = 1130
+                }
+                else if (hours > 12){
+                    timePeriod.value = 1430
+                }
+                else if (hours > 15){
+                    timePeriod.value = 1830
+                }
+                else if (hours > 19){
+                    timePeriod.value = 2130
+                }
+            }
+            checkTime()
+            
+            when.value = (String(year + '/' + date.format(now, 'MM/DD') + ' '+ timePeriod.value + '回報') )
+            
+            setInterval(()=>{
+                checkTime()
+            }, 2000)
+            
             refreshAPI();
+                
         });
 
         return {
-            tt,
             toast,
             info,
             health,
@@ -161,7 +209,7 @@ export default defineComponent({
             refreshAPI,
             report,
             dragged,
-            today,
+            timePeriod,
             options,
         };
     },
@@ -197,6 +245,12 @@ export default defineComponent({
         background-color: var(--highlight-yellow);
     }
 }
+
+.now-time-period{
+    color: var(--highlight-yellow);
+    font-size: 2.5rem;
+}
+
 .last-report {
     color: var(--secondary-gray);
 }
