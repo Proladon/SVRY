@@ -1,5 +1,5 @@
 <template>
-  <div class="copy-btn" @click="copytext">Copy template</div>
+  <div class="copy-btn" @click="copytext"><span>Copy template</span></div>
   <div id="report-template">
     <pre class="preview">{{template}}</pre>
   </div>
@@ -45,8 +45,12 @@ export default defineComponent({
 
 .copy-btn{
   width: 50%;
+  height: 30px;
   margin: 0 auto;
   margin-bottom: 20px;
   background-color: cadetblue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

@@ -115,7 +115,8 @@ export default defineComponent({
             
             axios({
                 method: "post",
-                url: "http://140.116.183.176:1451/refreshJson",
+                url: "//140.116.183.176:1451/refreshJson",
+                // url: "http://140.116.183.176:1451/refreshJson",
                 // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
@@ -153,7 +154,8 @@ export default defineComponent({
             // Posting API
             axios({
                 method: "post",
-                url: "http://140.116.183.176:1451/send",
+                url: "//140.116.183.176:1451/send",
+                // url: "http://140.116.183.176:1451/send",
                 // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
@@ -176,7 +178,8 @@ export default defineComponent({
 
             axios({
                 method: "post",
-                url: "http://140.116.183.176:1451/refresh",
+                url: "//140.116.183.176:1451/refresh",
+                // url: "http://140.116.183.176:1451/refresh",
                 // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
@@ -202,14 +205,13 @@ export default defineComponent({
 
 
             const checkTime = ()=>{
-                
-                if (hours > 9){
+                if (hours > 9 && hours < 12){
                     timePeriod.value = 1130
                 }
-                else if (hours > 12){
+                else if (hours > 12 && hours < 15){
                     timePeriod.value = 1430
                 }
-                else if (hours > 15){
+                else if (hours > 15 && hours < 19){
                     timePeriod.value = 1830
                 }
                 else if (hours > 19){
@@ -222,7 +224,7 @@ export default defineComponent({
             
             setInterval(()=>{
                 checkTime()
-            }, 2000)
+            }, 30000)
             
             refreshAPI();
                 
