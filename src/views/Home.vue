@@ -6,16 +6,20 @@
             <div class="classes head-bar-item"><span>Class 4</span></div>
         </div>
 
-        <p class="now-time-period">{{timePeriod}}</p>
-        
-        <!-- Report Button -->
-        <div class="report-btn" @click="showModal = true">
+        <p class="now-time-period">{{ timePeriod }}</p>
+
+        <!-- Operate Button -->
+        <div class="operate-btn report-btn" v-show="slide === 0" @click="showModal = true">
             <span>Report</span>
         </div>
 
-        <p class="last-report">reported: {{info.reported}} / un-reported: {{info.unreported}}</p>
+        <div class="operate-btn refresh-btn" v-show="slide === 1" @click="refreshTemplate"><span>Refresh</span></div>
+        <div class="operate-btn copy-btn" v-show="slide === 1" @click="copytext"><span>Copy template</span></div>
 
-        
+        <p class="last-report">
+            reported: {{ info.reported }} / un-reported: {{ info.unreported }}
+        </p>
+
         <!-- <Status :state="reportState" :info="info" /> -->
 
         <!-- Report Modal -->
@@ -37,14 +41,16 @@
                 <label for="getCool">感冒</label>
             </div>
 
+            <p style="font-size: 14px;">Default: 無感冒無發燒</p>
+
             <div class="modal__action">
                 <button class="vfm-btn" @click="report">confirm</button>
             </div>
         </vue-final-modal>
 
-        <splide :options="options" @splide:dragged="dragged" @splide:pagination:updated="changeView">
+        <!-- Splide -->
+        <splide :options="options" @splide:pagination:updated="changeView">
             <splide-slide>
-                
                 <Status :state="reportState" :info="info" />
             </splide-slide>
             <splide-slide>
@@ -59,19 +65,20 @@ import { defineComponent, onMounted, reactive, ref } from "vue";
 import Status from "@/components/Status.vue";
 import ReportTemplate from "@/components/ReportTemplate.vue";
 import axios from "axios";
-import date from 'date-and-time';
-import { useToast, TYPE  } from "vue-toastification";
-import { Splide, SplideSlide } from '@splidejs/vue-splide';
+import date from "date-and-time";
+import { useToast, TYPE } from "vue-toastification";
+import { Splide, SplideSlide } from "@splidejs/vue-splide";
+import copy from 'copy-to-clipboard';
 
-import '@splidejs/splide/dist/css/themes/splide-default.min.css';
+import "@splidejs/splide/dist/css/themes/splide-default.min.css";
 
 export default defineComponent({
     name: "Home",
-    components: { 
+    components: {
         Status,
         Splide,
         SplideSlide,
-        ReportTemplate
+        ReportTemplate,
     },
 
     setup() {
@@ -79,10 +86,10 @@ export default defineComponent({
         const toast = useToast();
 
         // Time
-        const timePeriod = ref('')
-        const today = ref(date.format(new Date(), 'YYYY/MM/DD'))
-        const when = ref('')
-        const template = ref('')
+        const timePeriod = ref("");
+        const today = ref(date.format(new Date(), "YYYY/MM/DD"));
+        const when = ref("");
+        const template = ref("");
 
         // Modal
         const showModal = ref(false);
@@ -97,8 +104,8 @@ export default defineComponent({
         const health = reactive({
             fever: false,
             hospital: false,
-            getCool: false
-        })
+            getCool: false,
+        });
 
         // Splide
         const options = {
@@ -106,58 +113,48 @@ export default defineComponent({
             pagination: true,
             padding: 0,
             gap: 50,
-        }
+        };
 
-        const slide = ref(0)
-        
+        const slide = ref(0);
 
-        const refreshAPI = () => {
-            
+        // API Operate
+        const refreshJsonAPI = () => {
             axios({
                 method: "post",
-                // url: "//140.116.183.176:1451/refreshJson", 
-                // url: "http://140.116.183.176:1451/refreshJson",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
+                // url: "//140.116.183.176:1451/refreshJson",
+                url: "http://140.116.183.176:1451/refreshJson",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", test
-                    token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
+                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", // TEST
+                    token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21", //3BWPN - 4
                     when: when.value,
                 },
             }).then((res) => {
-                info.total = 0
-                info.reported = 0
-                info.unreported = 0
+                // reset info
+                info.total = 0;
+                info.reported = 0;
+                info.unreported = 0;
+
+                // re-count info
                 for (const i in res.data) {
                     info.total += 1;
                     if (res.data[i] !== "尚未回覆") {
                         info.reported += 1;
+                    } else {
+                        info.unreported += 1;
                     }
-                    else{info.unreported += 1}
                 }
+
                 reportState.value = res.data;
             });
         };
 
-        const report = () => {
-            const tagNum = document.getElementById("tagNum").value;
-            let doing = document.getElementById("doing").value;
-            doing.trim()
-            
-            if(doing !== '尚未回覆'){
-                // Checking health
-                if (health.fever){doing += ' 有發燒'}
-                if (health.hospital){doing += ' 有住院'}
-                if (health.getCool){doing += ' 有感冒'}
-                else{doing += ' 無發燒無感冒'}
-            }
-
-
-            // Posting API
+        const sendAPI = (tagNum, doing) => {
             axios({
                 method: "post",
                 // url: "//140.116.183.176:1451/send",
-                // url: "http://140.116.183.176:1451/send",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
+                url: "http://140.116.183.176:1451/send",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
                 data: {
                     // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
@@ -166,71 +163,132 @@ export default defineComponent({
                     what: doing,
                 },
             }).then((res) => {
-                
-                refreshAPI();
+                refreshJsonAPI();
+
                 toast(tagNum + " Report success!", {
-                        type: TYPE.SUCCESS 
-                    })
+                    type: TYPE.SUCCESS,
+                });
                 showModal.value = false;
             });
         };
 
-        const dragged = () => {
-            refreshAPI();
-
+        const getReportString = () => {
             axios({
                 method: "post",
                 // url: "//140.116.183.176:1451/refresh",
-                // url: "http://140.116.183.176:1451/refresh",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
+                url: "http://140.116.183.176:1451/refresh",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
                 data: {
                     // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
                     when: when.value,
                 },
-            }).then(res=>{
+            }).then((res) => {
                 template.value = res.data
-                    .replaceAll('<strong style="background-color: gray;">', '')
-                    .replaceAll('</strong>', '')
+                    .replaceAll('<strong style="background-color: gray;">', "")
+                    .replaceAll("</strong>", "");
+            });
+        };
+
+        const report = () => {
+            // get user input
+            const tagNum = document.getElementById("tagNum").value;
+            let doing = document.getElementById("doing").value;
+            
+            if(tagNum === ''){
+                toast("請輸入你的學號",{
+                     type: TYPE.ERROR
+                });
+                return
+            }
+
+            // Checking user input
+            doing.trim();
+            if(doing === ''){
+                toast("請輸入你正在做什麼",{
+                     type: TYPE.ERROR
+                });
+                return
+            }
+
+            let pass = true
+            if (doing !== "尚未回覆") {
+                // Checking health
+                if (health.fever) {
+                    pass = false
+                    doing += " 有發燒";
+                }
+                if (health.hospital) {
+                    pass = false
+                    doing += " 有住院";
+                }
+                if (health.getCool) {
+                    pass = false
+                    doing += " 有感冒";
+                } 
+                if (pass) {
+                    doing += " 無發燒無感冒";
+                }
+            }
+
+            // Posting API
+            sendAPI(tagNum, doing);
+            getReportString();
+        };
+
+
+        const changeView = (data) => {
+            slide.value = data._i;
+        };
+
+        const refreshTemplate = ()=>{
+            getReportString();
+            toast("Refresh Done", {
+                type: TYPE.INFO
             })
         }
 
-        const changeView = (data)=>{
-            slide.value = data._i
+        const copytext = ()=>{
+            copy(template.value)
+            toast("Copy Done", {
+                type: TYPE.INFO
+            })
         }
 
         onMounted(() => {
-            
             // '109/12/31 2130回報'
-            const now = new Date()
-            const hours = now.getHours()
-            const year = date.format(now, 'YYYY') - 1911
+            const now = new Date();
+            const hours = now.getHours();
+            const year = date.format(now, "YYYY") - 1911;
 
+            const checkTime = () => {
+                if (hours >= 9 && hours < 12) {
+                    timePeriod.value = 1130;
+                } else if (hours >= 12 && hours < 15) {
+                    timePeriod.value = 1430;
+                } else if (hours >= 15 && hours < 19) {
+                    timePeriod.value = 1830;
+                } else if (hours >= 19) {
+                    timePeriod.value = 2130;
+                }
+            };
+            checkTime();
 
-            const checkTime = ()=>{
-                if (hours > 9 && hours < 12){
-                    timePeriod.value = 1130
-                }
-                else if (hours > 12 && hours < 15){
-                    timePeriod.value = 1430
-                }
-                else if (hours > 15 && hours < 19){
-                    timePeriod.value = 1830
-                }
-                else if (hours > 19){
-                    timePeriod.value = 2130
-                }
-            }
-            checkTime()
-            
-            when.value = (String(year + '/' + date.format(now, 'MM/DD') + ' '+ timePeriod.value + '回報') )
-            
-            setInterval(()=>{
-                checkTime()
-            }, 30000)
-            
-            refreshAPI();
-                
+            when.value = String(
+                year +
+                    "/" +
+                    date.format(now, "MM/DD") +
+                    " " +
+                    timePeriod.value +
+                    "回報"
+            );
+
+            setInterval(() => {
+                checkTime();
+            }, 30000);
+
+            refreshJsonAPI();
+            getReportString();
         });
 
         return {
@@ -239,14 +297,20 @@ export default defineComponent({
             health,
             showModal,
             reportState,
-            refreshAPI,
+
+            refreshJsonAPI,
+            sendAPI,
+            getReportString,
+
+            refreshTemplate,
+
             report,
             template,
-            dragged,
             timePeriod,
             options,
             changeView,
-            slide
+            slide,
+            copytext,
         };
     },
 });
@@ -259,8 +323,8 @@ export default defineComponent({
 }
 
 .app-title {
-    margin-top: 30px;
-    margin-bottom: 30px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     color: var(--primary-gray);
 }
 
@@ -282,7 +346,7 @@ export default defineComponent({
     }
 }
 
-.now-time-period{
+.now-time-period {
     color: var(--highlight-yellow);
     font-size: 2.5rem;
 }
@@ -290,15 +354,7 @@ export default defineComponent({
 .last-report {
     color: var(--secondary-gray);
 }
-.report-btn {
-    width: 50%;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    background-color: var(--highlight-red);
-}
+
 
 ::v-deep .modal-container {
     display: flex;
@@ -314,12 +370,12 @@ export default defineComponent({
     padding: 2rem;
     border-radius: 0.5rem;
     background: var(--secondary-gray);
-    box-shadow: 5px 5px 10px 5px rgba(0, 0, 0, 0.364) ;
+    box-shadow: 5px 5px 10px 5px rgba(0, 0, 0, 0.364);
 }
 .modal__action {
     margin-top: 30px;
 
-    .vfm-btn{
+    .vfm-btn {
         padding-left: 15px;
         padding-right: 15px;
         height: 30px;
@@ -330,10 +386,38 @@ export default defineComponent({
     }
 }
 
-.check-box-wrapper{
+.check-box-wrapper {
     display: flex;
     justify-content: space-between;
 }
+
+.operate-btn{
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-btn {
+    width: 50%;
+    margin: 0 auto;
+    background-color: var(--highlight-red);
+}
+
+.refresh-btn{
+  width: 50%;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  background-color: cadetblue;
+}
+
+.copy-btn{
+  width: 50%;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  background-color: cadetblue;
+}
+
 .user-input {
     height: 1.5rem;
     margin-top: 10px;

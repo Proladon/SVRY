@@ -1,32 +1,16 @@
 <template>
-  <div class="copy-btn" @click="copytext"><span>Copy template</span></div>
+  <!-- <div class="copy-btn" @click="copytext"><span>Copy template</span></div> -->
   <div id="report-template">
     <pre class="preview">{{template}}</pre>
   </div>
 </template>
 
 <script>
-import { defineComponent, props } from "vue";
-import copy from 'copy-to-clipboard';
-import { useToast, TYPE  } from "vue-toastification";
+import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "ReportTemplate",
     props: ['template'],
-
-    setup(props){
-      const toast = useToast();
-      const copytext = ()=>{
-        copy(props.template)
-        toast("Copy Done", {
-            type: TYPE.INFO
-        })
-      }
-
-      return{
-        copytext
-      }
-    }
     
 });
 </script>
@@ -43,14 +27,4 @@ export default defineComponent({
     margin: 0;
 }
 
-.copy-btn{
-  width: 50%;
-  height: 30px;
-  margin: 0 auto;
-  margin-bottom: 20px;
-  background-color: cadetblue;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 </style>
