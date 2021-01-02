@@ -3,10 +3,10 @@
         <p class="app-title">Soldier Vacation Report System</p>
         <div class="head-bar">
             <div class="unit head-bar-item"><span>3BWPN</span></div>
-            <div class="classes head-bar-item"><span>Class 4</span></div>
+            <div class="classes head-bar-item" @click="openClassModal"><span>Class {{classNum}}</span></div>
         </div>
 
-        <p class="now-time-period">{{ timePeriod }}</p>
+        <p class="now-time-period" @click="openTimePeriodModal">{{ timePeriod }}</p>
 
         <!-- Operate Button -->
         <div class="operate-btn report-btn" v-show="slide === 0" @click="showModal = true">
@@ -16,12 +16,20 @@
         <div class="operate-btn refresh-btn" v-show="slide === 1" @click="refreshTemplate"><span>Refresh</span></div>
         <div class="operate-btn copy-btn" v-show="slide === 1" @click="copytext"><span>Copy template</span></div>
 
-        <p class="last-report">
+        <p class="last-report" v-show="slide === 0">
             reported: {{ info.reported }} / un-reported: {{ info.unreported }}
         </p>
 
-        <!-- <Status :state="reportState" :info="info" /> -->
-
+        <!-- Splide -->
+        <splide :options="options" @splide:pagination:updated="changeView">
+            <splide-slide>
+                <Status :state="reportState" :info="info" />
+            </splide-slide>
+            <splide-slide>
+                <ReportTemplate :template="template" />
+            </splide-slide>
+        </splide>
+        
         <!-- Report Modal -->
         <vue-final-modal v-model="showModal" classes="modal-container" content-class="modal-content">
             Report form
@@ -48,15 +56,20 @@
             </div>
         </vue-final-modal>
 
-        <!-- Splide -->
-        <splide :options="options" @splide:pagination:updated="changeView">
-            <splide-slide>
-                <Status :state="reportState" :info="info" />
-            </splide-slide>
-            <splide-slide>
-                <ReportTemplate :template="template" />
-            </splide-slide>
-        </splide>
+        <vue-final-modal v-model="timePeriodModal" classes="modal-container" content-class="modal-content">
+            <p @click="chooseTimePeriod('1130')">1130</p>
+            <p @click="chooseTimePeriod('1430')">1430</p>
+            <p @click="chooseTimePeriod('1830')">1830</p>
+            <p @click="chooseTimePeriod('2130')">2130</p>
+        </vue-final-modal>
+
+        <vue-final-modal v-model="classModal" classes="modal-container" content-class="modal-content">
+            <div class="test">
+                <p v-for="num in 10" :key="num" @click="chooseClass(num)">{{num}}</p>
+            </div>
+            
+
+        </vue-final-modal>
     </div>
 </template>
 
@@ -82,17 +95,19 @@ export default defineComponent({
     },
 
     setup() {
+        const classNum = ref(4)
         // Toast Notification init
         const toast = useToast();
 
         // Time
         const timePeriod = ref("");
-        const today = ref(date.format(new Date(), "YYYY/MM/DD"));
         const when = ref("");
         const template = ref("");
 
         // Modal
         const showModal = ref(false);
+        const timePeriodModal = ref(false);
+        const classModal = ref(false);
 
         // Report
         const reportState = ref(null);
@@ -116,6 +131,27 @@ export default defineComponent({
         };
 
         const slide = ref(0);
+        
+        const checkTime = (auto=true) => {
+            const now = new Date();
+            const hours = now.getHours();
+            const year = date.format(now, "YYYY") - 1911;
+
+            if (auto){
+                if (hours >= 9 && hours < 12) {
+                    timePeriod.value = 1130;
+                } else if (hours >= 12 && hours < 15) {
+                    timePeriod.value = 1430;
+                } else if (hours >= 15 && hours < 19) {
+                    timePeriod.value = 1830;
+                } else if (hours >= 19) {
+                    timePeriod.value = 2130;
+                }
+            }
+
+            when.value = `${year}/${date.format(now, "MM/DD")} ${timePeriod.value}回報`
+        };
+        
 
         // API Operate
         const refreshJsonAPI = () => {
@@ -125,8 +161,8 @@ export default defineComponent({
                 url: "http://140.116.183.176:1451/refreshJson",
                 // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", // TEST
-                    token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21", //3BWPN - 4
+                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", // TEST
+                    // token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`, //3BWPN - 4
                     when: when.value,
                 },
             }).then((res) => {
@@ -156,8 +192,8 @@ export default defineComponent({
                 url: "http://140.116.183.176:1451/send",
                 // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
-                    token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
+                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
+                    // token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                     who: tagNum,
                     what: doing,
@@ -179,8 +215,8 @@ export default defineComponent({
                 url: "http://140.116.183.176:1451/refresh",
                 // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
-                    token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
+                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
+                    // token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                 },
             }).then((res) => {
@@ -235,18 +271,40 @@ export default defineComponent({
             sendAPI(tagNum, doing);
             getReportString();
         };
-
-
-        const changeView = (data) => {
-            slide.value = data._i;
-        };
-
+        
         const refreshTemplate = ()=>{
             getReportString();
             toast("Refresh Done", {
                 type: TYPE.INFO
             })
         }
+
+        const openTimePeriodModal = ()=>{
+            timePeriodModal.value = true
+        };
+
+        const chooseTimePeriod = (period)=>{
+            timePeriod.value = Number(period)
+            checkTime(false)
+            timePeriodModal.value = false
+            refreshJsonAPI()
+            refreshTemplate()
+        };
+
+        const openClassModal = ()=>{
+            classModal.value = true
+        }
+
+        const chooseClass = (num)=>{
+            classNum.value = num
+            refreshJsonAPI()
+            getReportString();
+            classModal.value = false
+        }
+
+        const changeView = (data) => {
+            slide.value = data._i;
+        };
 
         const copytext = ()=>{
             copy(template.value)
@@ -255,37 +313,13 @@ export default defineComponent({
             })
         }
 
+     
+
+
+
         onMounted(() => {
-            // '109/12/31 2130回報'
-            const now = new Date();
-            const hours = now.getHours();
-            const year = date.format(now, "YYYY") - 1911;
 
-            const checkTime = () => {
-                if (hours >= 9 && hours < 12) {
-                    timePeriod.value = 1130;
-                } else if (hours >= 12 && hours < 15) {
-                    timePeriod.value = 1430;
-                } else if (hours >= 15 && hours < 19) {
-                    timePeriod.value = 1830;
-                } else if (hours >= 19) {
-                    timePeriod.value = 2130;
-                }
-            };
             checkTime();
-
-            when.value = String(
-                year +
-                    "/" +
-                    date.format(now, "MM/DD") +
-                    " " +
-                    timePeriod.value +
-                    "回報"
-            );
-
-            setInterval(() => {
-                checkTime();
-            }, 30000);
 
             refreshJsonAPI();
             getReportString();
@@ -293,19 +327,31 @@ export default defineComponent({
 
         return {
             toast,
+            classNum,
+            
+            // Modal
+            showModal,
+            timePeriodModal,
+            classModal,
+            openClassModal,
+            openTimePeriodModal,
+            chooseTimePeriod,
+            chooseClass,
+            
+            // Report Info
             info,
             health,
-            showModal,
+            report,
             reportState,
+            template,
 
-            refreshJsonAPI,
+            // API
             sendAPI,
+            refreshJsonAPI,
+            refreshTemplate,
             getReportString,
 
-            refreshTemplate,
-
-            report,
-            template,
+            checkTime,
             timePeriod,
             options,
             changeView,
@@ -384,6 +430,12 @@ export default defineComponent({
         outline: none;
         background-color: var(--highlight-yellow);
     }
+}
+
+.test{
+    width: 5rem;
+    height: 150px;
+    overflow: scroll;
 }
 
 .check-box-wrapper {
