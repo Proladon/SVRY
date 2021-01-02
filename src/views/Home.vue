@@ -62,7 +62,7 @@ import axios from "axios";
 import date from 'date-and-time';
 import { useToast, TYPE  } from "vue-toastification";
 import { Splide, SplideSlide } from '@splidejs/vue-splide';
-import copy from 'copy-to-clipboard';
+
 import '@splidejs/splide/dist/css/themes/splide-default.min.css';
 
 export default defineComponent({
@@ -115,7 +115,8 @@ export default defineComponent({
             
             axios({
                 method: "post",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
+                url: "http://140.116.183.176:1451/refreshJson",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     when: when.value,
@@ -138,17 +139,22 @@ export default defineComponent({
         const report = () => {
             const tagNum = document.getElementById("tagNum").value;
             let doing = document.getElementById("doing").value;
+            doing.trim()
+            
+            if(doing !== '尚未回覆'){
+                // Checking health
+                if (health.fever){doing += ' 有發燒'}
+                if (health.hospital){doing += ' 有住院'}
+                if (health.getCool){doing += ' 有感冒'}
+                else{doing += ' 無發燒無感冒'}
+            }
 
-            // Checking health
-            if (health.fever){doing += ' 有發燒'}
-            if (health.hospital){doing += ' 有住院'}
-            if (health.getCool){doing += ' 有感冒'}
-            else{doing += ' 無發燒無感冒'}
 
             // Posting API
             axios({
                 method: "post",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
+                url: "http://140.116.183.176:1451/send",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     when: when.value,
@@ -170,7 +176,8 @@ export default defineComponent({
 
             axios({
                 method: "post",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
+                url: "http://140.116.183.176:1451/refresh",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
                 data: {
                     token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     when: when.value,

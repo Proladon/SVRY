@@ -3,7 +3,7 @@
     <div id="Status">
         <div class="status-tag" v-for="(p, index) in state" :key="p.tag">
             <div class="tag-content">
-                <div class="color-tag" :class="{'reported' : p !== '尚未回覆', 'unreported':p === '尚未回覆'}"></div>
+                <div class="color-tag" :class="{'reported' : !p.includes('尚未回覆'), 'unreported' : p.includes('尚未回覆')}"></div>
                 <div class="name-tag">#{{index.slice(2, index.length)}}</div>
             </div>
         </div>
