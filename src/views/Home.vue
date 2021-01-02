@@ -115,9 +115,9 @@ export default defineComponent({
             
             axios({
                 method: "post",
-                // url: "//140.116.183.176:1451/refreshJson", 
+                url: "://140.116.183.176:1451/refreshJson", 
                 // url: "http://140.116.183.176:1451/refreshJson",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
                     // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", test
                     token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
@@ -155,9 +155,9 @@ export default defineComponent({
             // Posting API
             axios({
                 method: "post",
-                // url: "//140.116.183.176:1451/send",
+                url: "://140.116.183.176:1451/send",
                 // url: "http://140.116.183.176:1451/send",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
                 data: {
                     // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
@@ -180,9 +180,9 @@ export default defineComponent({
 
             axios({
                 method: "post",
-                // url: "//140.116.183.176:1451/refresh",
+                url: "://140.116.183.176:1451/refresh",
                 // url: "http://140.116.183.176:1451/refresh",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
+                // url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
                 data: {
                     // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     token: "3~%E5%85%B5%E5%99%A8~4~15~11~14~18~21",
