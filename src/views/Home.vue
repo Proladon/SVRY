@@ -67,8 +67,10 @@
             <div class="test">
                 <p v-for="num in 10" :key="num" @click="chooseClass(num)">{{num}}</p>
             </div>
-            
+        </vue-final-modal>
 
+        <vue-final-modal v-model="loading" classes="modal-container" content-class="modal-content">
+            Loading
         </vue-final-modal>
     </div>
 </template>
@@ -108,6 +110,7 @@ export default defineComponent({
         const showModal = ref(false);
         const timePeriodModal = ref(false);
         const classModal = ref(false);
+        const loading = ref(false)
 
         // Report
         const reportState = ref(null);
@@ -155,6 +158,7 @@ export default defineComponent({
 
         // API Operate
         const refreshJsonAPI = () => {
+            loading.value = true
             axios({
                 method: "post",
                 // url: "http://140.116.183.176:1451/refreshJson",
@@ -181,10 +185,12 @@ export default defineComponent({
                 }
 
                 reportState.value = res.data;
+                loading.value = false
             });
         };
 
         const sendAPI = (tagNum, doing) => {
+            loading.value = true
             axios({
                 method: "post",
                 // url: "http://140.116.183.176:1451/send",
@@ -199,14 +205,16 @@ export default defineComponent({
             }).then((res) => {
                 refreshJsonAPI();
 
+                showModal.value = false;
+                loading.value = false
                 toast(tagNum + " Report success!", {
                     type: TYPE.SUCCESS,
                 });
-                showModal.value = false;
             });
         };
 
         const getReportString = () => {
+            loading.value = true
             axios({
                 method: "post",
                 // url: "http://140.116.183.176:1451/refresh",
@@ -220,6 +228,7 @@ export default defineComponent({
                 template.value = res.data
                     .replaceAll('<strong style="background-color: gray;">', "")
                     .replaceAll("</strong>", "");
+                    loading.value = false
             });
         };
 
@@ -325,6 +334,7 @@ export default defineComponent({
         return {
             toast,
             classNum,
+            loading,
             
             // Modal
             showModal,
