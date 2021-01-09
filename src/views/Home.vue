@@ -97,6 +97,8 @@ export default defineComponent({
     },
 
     setup() {
+        const apiUrl = ref("http://140.116.183.176:1451/")
+        // const apiUrl = ref("https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson")
         const classNum = ref(4)
         // Toast Notification init
         const toast = useToast();
@@ -152,7 +154,7 @@ export default defineComponent({
                 }
             }
 
-            when.value = `${year}/${date.format(now, "MM/DD")} ${timePeriod.value}回報`
+            when.value = `${year}/${date.format(now, "M/D")} ${timePeriod.value}回報`
         };
         
 
@@ -161,10 +163,8 @@ export default defineComponent({
             loading.value = true
             axios({
                 method: "post",
-                // url: "http://140.116.183.176:1451/refreshJson",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
+                url: apiUrl.value + "refreshJson",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", // TEST
                     token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                 },
@@ -193,10 +193,8 @@ export default defineComponent({
             loading.value = true
             axios({
                 method: "post",
-                // url: "http://140.116.183.176:1451/refresh",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
+                url: apiUrl.value + "refresh",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                 },
@@ -208,15 +206,13 @@ export default defineComponent({
             });
         };
 
-        
+
         const sendAPI = (tagNum, doing) => {
             loading.value = true
             axios({
                 method: "post",
-                // url: "http://140.116.183.176:1451/send",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
+                url: apiUrl.value + "send",
                 data: {
-                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
                     token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                     who: tagNum,
@@ -358,6 +354,7 @@ export default defineComponent({
             template,
 
             // API
+            apiUrl,
             sendAPI,
             refreshJsonAPI,
             refreshTemplate,
