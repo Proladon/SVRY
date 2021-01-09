@@ -141,7 +141,7 @@ export default defineComponent({
             const year = date.format(now, "YYYY") - 1911;
 
             if (auto){
-                if (hours >= 9 && hours < 12) {
+                if (hours >=0 && hours < 12) {
                     timePeriod.value = 1130;
                 } else if (hours >= 12 && hours < 15) {
                     timePeriod.value = 1430;
@@ -164,8 +164,8 @@ export default defineComponent({
                 // url: "http://140.116.183.176:1451/refreshJson",
                 url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson",
                 data: {
-                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", // TEST
-                    // token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`, //3BWPN - 4
+                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21", // TEST
+                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                 },
             }).then((res) => {
@@ -189,30 +189,6 @@ export default defineComponent({
             });
         };
 
-        const sendAPI = (tagNum, doing) => {
-            loading.value = true
-            axios({
-                method: "post",
-                // url: "http://140.116.183.176:1451/send",
-                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
-                data: {
-                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
-                    // token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
-                    when: when.value,
-                    who: tagNum,
-                    what: doing,
-                },
-            }).then((res) => {
-                refreshJsonAPI();
-
-                showModal.value = false;
-                loading.value = false
-                toast(tagNum + " Report success!", {
-                    type: TYPE.SUCCESS,
-                });
-            });
-        };
-
         const getReportString = () => {
             loading.value = true
             axios({
@@ -220,8 +196,8 @@ export default defineComponent({
                 // url: "http://140.116.183.176:1451/refresh",
                 url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refresh",
                 data: {
-                    token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
-                    // token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
+                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
+                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
                     when: when.value,
                 },
             }).then((res) => {
@@ -231,6 +207,38 @@ export default defineComponent({
                     loading.value = false
             });
         };
+
+        
+        const sendAPI = (tagNum, doing) => {
+            loading.value = true
+            axios({
+                method: "post",
+                // url: "http://140.116.183.176:1451/send",
+                url: "https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/send",
+                data: {
+                    // token: "3~%E6%B8%AC%E8%A9%A6~20~15~11~14~18~21",
+                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
+                    when: when.value,
+                    who: tagNum,
+                    what: doing,
+                },
+            }).then(() => {
+                refreshJsonAPI();
+
+                showModal.value = false;
+                loading.value = false
+            }).then(()=>{
+                getReportString();
+                toast(tagNum + " Report success!", {
+                    type: TYPE.SUCCESS,
+                });
+            }).catch(()=>{
+                toast("伺服器錯誤，請稍後再試，或連繫開發人員", {
+                    type: TYPE.ERROR,
+                });
+            })
+        };
+
 
         const report = () => {
             // get user input
@@ -275,14 +283,11 @@ export default defineComponent({
 
             // Posting API
             sendAPI(tagNum, doing);
-            getReportString();
+            
         };
         
         const refreshTemplate = ()=>{
             getReportString();
-            toast("Refresh Done", {
-                type: TYPE.INFO
-            })
         }
 
         const openTimePeriodModal = ()=>{
@@ -386,8 +391,10 @@ export default defineComponent({
     border: solid 1px var(--highlight-yellow);
     margin-top: 30px;
     margin-bottom: 30px;
+
     .head-bar-item {
         width: 100%;
+        cursor: pointer;
     }
 
     .unit {
@@ -402,6 +409,7 @@ export default defineComponent({
 .now-time-period {
     color: var(--highlight-yellow);
     font-size: 2.5rem;
+    cursor: pointer;
 }
 
 .last-report {
@@ -455,6 +463,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
 
 .report-btn {
