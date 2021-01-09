@@ -1,6 +1,7 @@
 <template>
     <div id="home">
         <p class="app-title">Soldier Vacation Report System</p>
+        <span style="font-size: 12px">Developers: leon123858、Proladon</span>
         <div class="head-bar">
             <div class="unit head-bar-item"><span>3BWPN</span></div>
             <div class="classes head-bar-item" @click="openClassModal"><span>Class {{classNum}}</span></div>
@@ -17,7 +18,7 @@
         <div class="operate-btn copy-btn" v-show="slide === 1" @click="copytext"><span>Copy template</span></div>
 
         <p class="last-report" v-show="slide === 0">
-            reported: {{ info.reported }} / un-reported: {{ info.unreported }}
+                reported: {{ info.reported }} / un-reported: {{ info.unreported }}
         </p>
 
         <!-- Splide -->
@@ -56,6 +57,7 @@
             </div>
         </vue-final-modal>
 
+        <!-- Time Period Modal -->
         <vue-final-modal v-model="timePeriodModal" classes="modal-container" content-class="modal-content">
             <p @click="chooseTimePeriod('1130')">1130</p>
             <p @click="chooseTimePeriod('1430')">1430</p>
@@ -63,15 +65,33 @@
             <p @click="chooseTimePeriod('2130')">2130</p>
         </vue-final-modal>
 
+        <!-- Base&Class Modal -->
         <vue-final-modal v-model="classModal" classes="modal-container" content-class="modal-content">
-            <div class="test">
-                <p v-for="num in 10" :key="num" @click="chooseClass(num)">{{num}}</p>
+            <p>Setting Class</p>
+            
+            <!-- <div class="class-num">
+                <p  v-for="num in 10" :key="num" @click="chooseClass(num)">{{num}}</p>
+            </div> -->
+
+            <label for="people">班級</label>
+            <input type="text"  id="classNum" class="user-input" placeholder="ex. 4 (range 1 ~ 10)">
+            
+            <label for="people">班級人數</label>
+            <input type="text"  id="people" class="user-input" placeholder="ex. 15">
+
+            <div class="modal__action">
+                <button class="vfm-btn" @click="chooseClass">confirm</button>
             </div>
         </vue-final-modal>
 
+        <!-- Loading Modal -->
         <vue-final-modal v-model="loading" classes="modal-container" content-class="modal-content">
             Loading
         </vue-final-modal>
+        <br>
+        <span style="color:gray;">Made with ❤</span>
+        <br>
+        
     </div>
 </template>
 
@@ -79,6 +99,7 @@
 import { defineComponent, onMounted, reactive, ref } from "vue";
 import Status from "@/components/Status.vue";
 import ReportTemplate from "@/components/ReportTemplate.vue";
+
 import axios from "axios";
 import date from "date-and-time";
 import { useToast, TYPE } from "vue-toastification";
@@ -99,7 +120,8 @@ export default defineComponent({
     setup() {
         const apiUrl = ref("http://140.116.183.176:1451/")
         // const apiUrl = ref("https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson")
-        const classNum = ref(4)
+        const classNum = ref('')
+        const totalPeople = ref('')
         // Toast Notification init
         const toast = useToast();
 
@@ -156,7 +178,7 @@ export default defineComponent({
 
             when.value = `${year}/${date.format(now, "M/D")} ${timePeriod.value}回報`
         };
-        
+      
 
         // API Operate
         const refreshJsonAPI = () => {
@@ -165,7 +187,7 @@ export default defineComponent({
                 method: "post",
                 url: apiUrl.value + "refreshJson",
                 data: {
-                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
+                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~${totalPeople.value}~11~14~18~21`,
                     when: when.value,
                 },
             }).then((res) => {
@@ -186,7 +208,11 @@ export default defineComponent({
 
                 reportState.value = res.data;
                 loading.value = false
-            });
+            }).catch(()=>{
+                toast("伺服器錯誤，請稍後再試，或連繫開發人員", {
+                    type: TYPE.ERROR,
+                });
+            })
         };
 
         const getReportString = () => {
@@ -195,7 +221,7 @@ export default defineComponent({
                 method: "post",
                 url: apiUrl.value + "refresh",
                 data: {
-                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
+                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~${totalPeople.value}~11~14~18~21`,
                     when: when.value,
                 },
             }).then((res) => {
@@ -203,7 +229,11 @@ export default defineComponent({
                     .replaceAll('<strong style="background-color: gray;">', "")
                     .replaceAll("</strong>", "");
                     loading.value = false
-            });
+            }).catch(()=>{
+                toast("伺服器錯誤，請稍後再試，或連繫開發人員", {
+                    type: TYPE.ERROR,
+                });
+            })
         };
 
 
@@ -213,7 +243,7 @@ export default defineComponent({
                 method: "post",
                 url: apiUrl.value + "send",
                 data: {
-                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~15~11~14~18~21`,
+                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~${totalPeople.value}~11~14~18~21`,
                     when: when.value,
                     who: tagNum,
                     what: doing,
@@ -238,14 +268,19 @@ export default defineComponent({
 
         const report = () => {
             // get user input
-            const tagNum = document.getElementById("tagNum").value;
+            let tagNum = document.getElementById("tagNum").value;
             let doing = document.getElementById("doing").value;
             
+            // Checking Number Tag
+            tagNum = String(Number(tagNum.trim()))
+
             if(tagNum === ''){
                 toast("請輸入你的學號",{
-                     type: TYPE.ERROR
+                    type: TYPE.ERROR
                 });
                 return
+            }else{
+                window.localStorage.setItem('userNum', tagNum)
             }
 
             // Checking user input
@@ -302,11 +337,40 @@ export default defineComponent({
             classModal.value = true
         }
 
-        const chooseClass = (num)=>{
-            classNum.value = num
-            refreshJsonAPI()
-            getReportString();
-            classModal.value = false
+        const chooseClass = ()=>{
+            const num = document.getElementById('classNum').value
+            const people = document.getElementById('people').value
+            let pass = true
+            num.trim()
+            people.trim()
+
+            if(num !== ''){
+                classNum.value = num
+                window.localStorage.setItem('classNum', num)
+            }else{
+                pass = false
+                toast("請輸入班級(數字)!", {
+                    type: TYPE.ERROR
+                })
+            }
+
+            if(people !== ''){
+                totalPeople.value = people
+                window.localStorage.setItem('totalPeople', people)
+            }else{
+                pass = false
+                toast("請輸入班級人數(數字)!", {
+                    type: TYPE.ERROR
+                })
+            }
+            
+            
+            if (pass){
+                refreshJsonAPI()
+                getReportString()
+                classModal.value = false
+            }
+            
         }
 
         const changeView = (data) => {
@@ -325,17 +389,33 @@ export default defineComponent({
 
 
         onMounted(() => {
+            
+            const userNumStroge = localStorage.getItem('userNum')
+            const classNumStorge = localStorage.getItem('classNum')
+            const totalPeopleStorge = localStorage.getItem('totalPeople')
 
-            checkTime();
+            if(classNumStorge === null || totalPeopleStorge === null){
+                classModal.value = true
+            }else{
+                document.getElementById("tagNum").value = userNumStroge
+                classNum.value = classNumStorge
+                totalPeople.value = totalPeopleStorge
+            }
 
-            refreshJsonAPI();
-            getReportString();
+                checkTime();
+    
+                refreshJsonAPI();
+                getReportString();
+
+
         });
 
         return {
             toast,
             classNum,
+            totalPeople,
             loading,
+            
             
             // Modal
             showModal,
@@ -434,6 +514,7 @@ export default defineComponent({
     margin-top: 30px;
 
     .vfm-btn {
+        font-family: 'Share Tech Mono', monospace;
         padding-left: 15px;
         padding-right: 15px;
         height: 30px;
@@ -444,8 +525,8 @@ export default defineComponent({
     }
 }
 
-.test{
-    width: 5rem;
+.class-num{
+    width: 200px;
     height: 150px;
     overflow: scroll;
 }
