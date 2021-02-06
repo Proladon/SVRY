@@ -98,8 +98,7 @@
 
         <!-- Quick Report Setting Modal -->
         <vue-final-modal v-model="quickReport" @before-open="initQuickSet" classes="modal-container" content-class="modal-content">
-            <input type="text" v-for=" index in 5" :key="index" :id="`set_${index-1}`" >
-            
+            <input type="text" v-for=" index in 5" class="quick-set-input" :key="index" :id="`set_${index-1}`" :placeholder="`Quick Report Set ${index}`">
             <div class="modal__action">
                 <button class="vfm-btn" @click="setQuickReport">confirm</button>
             </div>
@@ -108,7 +107,7 @@
         <!-- Select Quick Set Modal -->
         <vue-final-modal v-model="selectQuickSet" classes="modal-container" content-class="modal-content">
             <div class="quick-set">
-                <p v-for=" index in 5" :key="index">{{quickSet.set[index-1]}}</p>
+                <p v-for=" index in 5" :key="index" class="quick-set-option" v-show="quickSet.set[index-1] !==''" @click="qReport(index-1)">{{quickSet.set[index-1]}}</p>
             </div>
         </vue-final-modal>
         
@@ -445,6 +444,10 @@ export default defineComponent({
             quickReport.value = false
         }
 
+        const qReport = index=>{
+            sendAPI(localStorage.getItem('userNum'), quickSet.set[index] + " 無發燒無感冒")
+            selectQuickSet.value = false
+        }
      
 
 
@@ -465,6 +468,18 @@ export default defineComponent({
                 totalPeople.value = totalPeopleStorge
             }
 
+            const quickSetStorge = JSON.parse(localStorage.getItem('quickReportSet'))
+            if(!quickSetStorge){
+                const data = {}
+                for(let index=0; index<5; index++){data[index]=`Quick Report Set ${index+1}`}
+                localStorage.setItem('quickReportSet', JSON.stringify(data))
+            }else{
+                for(let index=0; index<5; index++){
+                    document.getElementById(`set_${index}`).value = quickSetStorge[index]
+                    quickSet.set = quickSetStorge
+                }
+            }
+
             
             
             checkTime();
@@ -483,6 +498,7 @@ export default defineComponent({
             setQuickReport,
             quickSet,
             initQuickSet,
+            qReport,
             
             
             // Modal
@@ -641,6 +657,22 @@ export default defineComponent({
         height: 100%;
         background-color: grey;
     }
+}
+
+.quick-set-input{
+    height: 30px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.quick-set-option{
+    width: 12rem;
+    overflow: hidden;
+    border: solid 2px cadetblue;
+    box-sizing: border-box;
+    padding: 5px;
+    border-radius: 5px;
+    text-align: left;
 }
 
 .refresh-btn{
