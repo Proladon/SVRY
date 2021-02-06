@@ -13,6 +13,12 @@
         <div class="operate-btn report-btn" v-show="slide === 0" @click="showModal = true">
             <span>Report</span>
         </div>
+        <br>
+        <div class="quick-report-btn" v-show="slide === 0" >
+            <div class="quick-report" @click="selectQuickSet = true">Quick Report</div>
+            <div class="quick-report-setting" @click="quickReport = true">⚙</div>
+        </div>
+        
 
         <div class="operate-btn refresh-btn" v-show="slide === 1" @click="refreshTemplate"><span>Refresh</span></div>
         <div class="operate-btn copy-btn" v-show="slide === 1" @click="copytext"><span>Copy template</span></div>
@@ -88,6 +94,25 @@
         <vue-final-modal v-model="loading" classes="modal-container" content-class="modal-content">
             Loading
         </vue-final-modal>
+
+
+        <!-- Quick Report Setting Modal -->
+        <vue-final-modal v-model="quickReport" @before-open="initQuickSet" classes="modal-container" content-class="modal-content">
+            <input type="text" v-for=" index in 5" :key="index" :id="`set_${index-1}`" >
+            
+            <div class="modal__action">
+                <button class="vfm-btn" @click="setQuickReport">confirm</button>
+            </div>
+        </vue-final-modal>
+
+        <!-- Select Quick Set Modal -->
+        <vue-final-modal v-model="selectQuickSet" classes="modal-container" content-class="modal-content">
+            <div class="quick-set">
+                <p v-for=" index in 5" :key="index">{{quickSet.set[index-1]}}</p>
+            </div>
+        </vue-final-modal>
+        
+        
         <br>
         <span style="color:gray;">Made with ❤</span>
         <br>
@@ -118,12 +143,17 @@ export default defineComponent({
     },
 
     setup() {
-        const apiUrl = ref("http://140.116.183.176:1451/")
+        // const apiUrl = ref("http://140.116.183.176:1451/") //成大server
+        const apiUrl = ref("http://140.116.183.54:1341/")
         // const apiUrl = ref("https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson")
         const classNum = ref('')
         const totalPeople = ref('')
         // Toast Notification init
         const toast = useToast();
+
+        const quickSet = reactive({
+            set:[]
+        })
 
         // Time
         const timePeriod = ref("");
@@ -135,6 +165,8 @@ export default defineComponent({
         const timePeriodModal = ref(false);
         const classModal = ref(false);
         const loading = ref(false)
+        const quickReport = ref(false);
+        const selectQuickSet = ref(false);
 
         // Report
         const reportState = ref(null);
@@ -384,6 +416,35 @@ export default defineComponent({
             })
         }
 
+        const initQuickSet = ()=>{
+            const quickSetStorge = JSON.parse(localStorage.getItem('quickReportSet'))
+            if(!quickSetStorge){
+                localStorage.setItem('quickReportSet', JSON.stringify({}))
+            }else{
+                for(let index=0; index<5; index++){
+                    document.getElementById(`set_${index}`).value = quickSetStorge[index]
+                    quickSet.set = quickSetStorge
+                }
+            }
+
+        }
+
+        const setQuickReport = ()=>{
+            
+            const setData = {}
+            for(let index=0; index<5; index++){
+                const data = document.getElementById(`set_${index}`).value
+                if(data !== ''){
+                    setData[index]=data
+                }
+                
+            }
+            localStorage.setItem('quickReportSet', JSON.stringify(setData))
+            quickSet.set = setData
+
+            quickReport.value = false
+        }
+
      
 
 
@@ -393,6 +454,8 @@ export default defineComponent({
             const userNumStroge = localStorage.getItem('userNum')
             const classNumStorge = localStorage.getItem('classNum')
             const totalPeopleStorge = localStorage.getItem('totalPeople')
+            
+            
 
             if(classNumStorge === null || totalPeopleStorge === null){
                 classModal.value = true
@@ -402,10 +465,12 @@ export default defineComponent({
                 totalPeople.value = totalPeopleStorge
             }
 
-                checkTime();
+            
+            
+            checkTime();
     
-                refreshJsonAPI();
-                getReportString();
+            refreshJsonAPI();
+            getReportString();
 
 
         });
@@ -415,6 +480,9 @@ export default defineComponent({
             classNum,
             totalPeople,
             loading,
+            setQuickReport,
+            quickSet,
+            initQuickSet,
             
             
             // Modal
@@ -425,6 +493,8 @@ export default defineComponent({
             openTimePeriodModal,
             chooseTimePeriod,
             chooseClass,
+            quickReport,
+            selectQuickSet,
             
             // Report Info
             info,
@@ -550,6 +620,29 @@ export default defineComponent({
     background-color: var(--highlight-red);
 }
 
+.quick-report-btn{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 50%;
+    height: 30px;
+    margin: 0 auto;
+    background-color: skyblue;
+    
+    .quick-report{
+        width: 100%;
+    }
+
+    .quick-report-setting{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 20%;
+        height: 100%;
+        background-color: grey;
+    }
+}
+
 .refresh-btn{
   width: 50%;
   margin: 0 auto;
@@ -573,3 +666,5 @@ export default defineComponent({
     border-radius: 0.5rem;
 }
 </style>
+
+
