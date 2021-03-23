@@ -470,6 +470,18 @@ export default defineComponent({
 #home {
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
+    padding-top: 100px;
+    padding-left: 20vw;
+    padding-right: 20vw;
+}
+
+@media screen and(max-width: 640px) {
+    #home {
+        padding-top: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }   
 }
 
 .app-title {
@@ -567,6 +579,7 @@ export default defineComponent({
 
 .quick-report-btn{
     display: flex;
+    cursor: pointer;
     justify-content: space-between;
     align-items: center;
     width: 50%;

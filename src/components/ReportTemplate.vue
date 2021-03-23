@@ -32,6 +32,8 @@ export default defineComponent({
 <style lang="scss" scoped>
 #report-template {
   height: 100%;
+  width: 50%;
+  margin: 0 auto;
   background-color: var(--secondary-gray);
 }
 
@@ -39,6 +41,12 @@ export default defineComponent({
     padding: 15px;
     text-align: left;
     margin: 0;
+}
+
+@media screen and (max-width: 640px){
+  #report-template {
+    width: 100%;
+  } 
 }
 
 </style>
