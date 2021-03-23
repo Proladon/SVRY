@@ -1,5 +1,4 @@
 <template>
-  <!-- <div class="copy-btn" @click="copytext"><span>Copy template</span></div> -->
   <div id="report-template">
     <pre class="preview">{{template}}</pre>
   </div>

@@ -150,7 +150,6 @@ export default defineComponent({
         // Time
         const timePeriod = ref("");
         const when = ref("");
-        const template = ref("");
 
         // Modal
         const showModal = ref(false);
@@ -353,7 +352,8 @@ export default defineComponent({
         };
 
         const copytext = ()=>{
-            copy(template.value)
+            const template = document.getElementsByClassName('preview')[0].innerText
+            copy(template)
             toast("Copy Done", {
                 type: TYPE.INFO
             })
@@ -452,7 +452,6 @@ export default defineComponent({
             health,
             report,
             reportState,
-            template,
 
             // API
             refreshSate,
