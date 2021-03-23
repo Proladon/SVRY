@@ -33,7 +33,7 @@
                 <Status :state="reportState.data" :info="info" />
             </splide-slide>
             <splide-slide>
-                <ReportTemplate :state="reportState.data"/>
+                <ReportTemplate :state="reportState.data" :classNum="classNum" :when="when"/>
             </splide-slide>
         </splide>
         
@@ -200,12 +200,12 @@ export default defineComponent({
                 }
             }
 
-            when.value = `${year}/${date.format(now, "M/D")} ${timePeriod.value}回報`
-        };
+            when.value = `${date.format(now, "M/D")} 兵器連第${classNum.value}班 ${timePeriod.value}回報`
+        }
       
 
         // API Operate
-        const refreshJsonAPI = () => {
+        const refreshSate = () => {
             loading.value = true
 
             // reset info
@@ -231,6 +231,7 @@ export default defineComponent({
             // get user input
             let tagNum = document.getElementById("tagNum").value;
             let doing = document.getElementById("doing").value;
+            let update = false
             
             // Checking Number Tag
             tagNum = String(Number(tagNum.trim()))
@@ -255,6 +256,7 @@ export default defineComponent({
 
             let pass = true
             if (doing !== "尚未回覆") {
+                update = true
                 // Checking health
                 if (health.fever) {
                     pass = false
@@ -286,7 +288,12 @@ export default defineComponent({
             reportState.data[`${tagNum} user`] = doing
 
             showModal.value = false
-            toast.success(`${Number(tagNum)} Report success!`)
+            if(update){
+                toast.success(`${Number(tagNum)} Report update!`)
+            }else{
+                toast.success(`${Number(tagNum)} Report success!`)
+            }
+            refreshSate()
         };
         
 
@@ -299,7 +306,7 @@ export default defineComponent({
             timePeriod.value = Number(period)
             checkTime(false)
             timePeriodModal.value = false
-            refreshJsonAPI()
+            refreshSate()
         };
 
         const openClassModal = ()=>{
@@ -335,7 +342,7 @@ export default defineComponent({
             
             
             if (pass){
-                // refreshJsonAPI()
+                // refreshSate()
                 classModal.value = false
             }
             
@@ -413,7 +420,7 @@ export default defineComponent({
             }
 
             checkTime();
-            refreshJsonAPI();
+            refreshSate();
 
         });
 
@@ -426,6 +433,7 @@ export default defineComponent({
             quickSet,
             initQuickSet,
             qReport,
+            when,
             
             
             // Modal
@@ -447,7 +455,7 @@ export default defineComponent({
             template,
 
             // API
-            refreshJsonAPI,
+            refreshSate,
             checkTime,
             timePeriod,
             options,

@@ -1,18 +1,33 @@
 <template>
   <!-- <div class="copy-btn" @click="copytext"><span>Copy template</span></div> -->
   <div id="report-template">
-    <pre class="preview">{{state}}</pre>
+    <pre class="preview">{{template}}</pre>
   </div>
 </template>
 
 <script>
-import { defineComponent } from "vue";
+import { defineComponent, computed } from "vue";
 
 export default defineComponent({
     name: "ReportTemplate",
-    props: ['state'],
+    props: ['state', 'classNum', 'when'],
     
-});
+    setup(props){
+      const template = computed({
+          get: ()=>{
+            const state = props.state
+            let content = ""
+            const title = `${props.when}\n應到: 14員\n實到: 14員\n`
+            for(const key in state){
+              content += `3${String(props.classNum)}${key} ${state[key]}\n`
+            }
+            return title + content
+          }
+      })
+      
+      return{ template }
+    }
+})
 </script>
 
 <style lang="scss" scoped>
