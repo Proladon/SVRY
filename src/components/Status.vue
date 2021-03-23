@@ -4,7 +4,7 @@
         <div class="status-tag" v-for="(p, index) in state" :key="p.tag">
             <div class="tag-content">
                 <div class="color-tag" :class="{'reported' : !p.includes('尚未回覆'), 'unreported' : p.includes('尚未回覆')}"></div>
-                <div class="name-tag">#{{index.slice(2, index.length)}}</div>
+                <div class="name-tag">#{{index}}</div>
             </div>
         </div>
 
@@ -12,12 +12,24 @@
 </template>
 
 <script>
-import { defineComponent, props } from 'vue';
+import { defineComponent, props, computed } from 'vue';
    export default defineComponent({
        name: 'Status',
 
-       props: ['state', 'info']
-   })
+       props: ['state', 'info'],
+
+       setup(props){
+           const template = computed({
+               get: ()=>{return props.state},
+               set: (data)=>{
+                   console.log(data)
+                   return data
+               }
+           })
+           return{}
+       }
+
+     })
 </script>
 
 <style scoped lang="scss">

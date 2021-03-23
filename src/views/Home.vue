@@ -20,7 +20,7 @@
         </div>
         
 
-        <div class="operate-btn refresh-btn" v-show="slide === 1" @click="refreshTemplate"><span>Refresh</span></div>
+        <div class="operate-btn refresh-btn" v-show="slide === 1" ><span>Refresh</span></div>
         <div class="operate-btn copy-btn" v-show="slide === 1" @click="copytext"><span>Copy template</span></div>
 
         <p class="last-report" v-show="slide === 0">
@@ -30,10 +30,10 @@
         <!-- Splide -->
         <splide :options="options" @splide:pagination:updated="changeView">
             <splide-slide>
-                <Status :state="reportState" :info="info" />
+                <Status :state="reportState.data" :info="info" />
             </splide-slide>
             <splide-slide>
-                <ReportTemplate :template="template" />
+                <ReportTemplate :state="reportState.data"/>
             </splide-slide>
         </splide>
         
@@ -75,10 +75,6 @@
         <vue-final-modal v-model="classModal" classes="modal-container" content-class="modal-content">
             <p>Setting Class</p>
             
-            <!-- <div class="class-num">
-                <p  v-for="num in 10" :key="num" @click="chooseClass(num)">{{num}}</p>
-            </div> -->
-
             <label for="people">班級</label>
             <input type="text"  id="classNum" class="user-input" placeholder="ex. 4 (range 1 ~ 10)">
             
@@ -124,12 +120,11 @@ import { defineComponent, onMounted, reactive, ref } from "vue";
 import Status from "@/components/Status.vue";
 import ReportTemplate from "@/components/ReportTemplate.vue";
 
-import axios from "axios";
 import date from "date-and-time";
 import { useToast, TYPE } from "vue-toastification";
 import { Splide, SplideSlide } from "@splidejs/vue-splide";
 import copy from 'copy-to-clipboard';
-
+import demoData from '@/demoData.json'
 import "@splidejs/splide/dist/css/themes/splide-default.min.css";
 
 export default defineComponent({
@@ -142,9 +137,7 @@ export default defineComponent({
     },
 
     setup() {
-        // const apiUrl = ref("http://140.116.183.176:1451/") //成大server
-        const apiUrl = ref("http://140.116.183.54:1341/")
-        // const apiUrl = ref("https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson")
+
         const classNum = ref('')
         const totalPeople = ref('')
         // Toast Notification init
@@ -168,7 +161,7 @@ export default defineComponent({
         const selectQuickSet = ref(false);
 
         // Report
-        const reportState = ref(null);
+        const reportState = reactive({data: demoData});
         const info = reactive({
             total: 0,
             reported: 0,
@@ -214,86 +207,23 @@ export default defineComponent({
         // API Operate
         const refreshJsonAPI = () => {
             loading.value = true
-            axios({
-                method: "post",
-                url: apiUrl.value + "refreshJson",
-                data: {
-                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~${totalPeople.value}~11~14~18~21`,
-                    when: when.value,
-                },
-            }).then((res) => {
-                // reset info
-                info.total = 0;
-                info.reported = 0;
-                info.unreported = 0;
 
-                // re-count info
-                for (const i in res.data) {
-                    info.total += 1;
-                    if (res.data[i] !== "尚未回覆") {
-                        info.reported += 1;
-                    } else {
-                        info.unreported += 1;
-                    }
+            // reset info
+            info.total = 0;
+            info.reported = 0;
+            info.unreported = 0;
+
+            // re-count info
+            for (const i in demoData) {
+                info.total += 1;
+                if (demoData[i] !== "尚未回覆") {
+                    info.reported += 1;
+                } else {
+                    info.unreported += 1;
                 }
+            }
 
-                reportState.value = res.data;
-                loading.value = false
-            }).catch(()=>{
-                toast("伺服器錯誤，請稍後再試，或連繫開發人員", {
-                    type: TYPE.ERROR,
-                });
-            })
-        };
-
-        const getReportString = () => {
-            loading.value = true
-            axios({
-                method: "post",
-                url: apiUrl.value + "refresh",
-                data: {
-                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~${totalPeople.value}~11~14~18~21`,
-                    when: when.value,
-                },
-            }).then((res) => {
-                template.value = res.data
-                    .replaceAll('<strong style="background-color: gray;">', "")
-                    .replaceAll("</strong>", "");
-                    loading.value = false
-            }).catch(()=>{
-                toast("伺服器錯誤，請稍後再試，或連繫開發人員", {
-                    type: TYPE.ERROR,
-                });
-            })
-        };
-
-
-        const sendAPI = (tagNum, doing) => {
-            loading.value = true
-            axios({
-                method: "post",
-                url: apiUrl.value + "send",
-                data: {
-                    token: `3~%E5%85%B5%E5%99%A8~${classNum.value}~${totalPeople.value}~11~14~18~21`,
-                    when: when.value,
-                    who: tagNum,
-                    what: doing,
-                },
-            }).then(() => {
-                refreshJsonAPI();
-
-                showModal.value = false;
-                loading.value = false
-            }).then(()=>{
-                getReportString();
-                toast(tagNum + " Report success!", {
-                    type: TYPE.SUCCESS,
-                });
-            }).catch(()=>{
-                toast("伺服器錯誤，請稍後再試，或連繫開發人員", {
-                    type: TYPE.ERROR,
-                });
-            })
+            loading.value = false
         };
 
 
@@ -343,14 +273,23 @@ export default defineComponent({
                 }
             }
 
-            // Posting API
-            sendAPI(tagNum, doing);
-            
+            if(Number(tagNum) > 14 || Number(tagNum) < 1){
+                toast.error(`${tagNum} is not existing!`)
+                return
+            }
+            if(tagNum.length === 2){
+                tagNum = '0' + tagNum
+            }else if(tagNum.length === 1){
+                tagNum = '00' + tagNum
+            }
+
+            reportState.data[`${tagNum} user`] = doing
+
+            showModal.value = false
+            toast.success(`${Number(tagNum)} Report success!`)
         };
         
-        const refreshTemplate = ()=>{
-            getReportString();
-        }
+
 
         const openTimePeriodModal = ()=>{
             timePeriodModal.value = true
@@ -361,7 +300,6 @@ export default defineComponent({
             checkTime(false)
             timePeriodModal.value = false
             refreshJsonAPI()
-            refreshTemplate()
         };
 
         const openClassModal = ()=>{
@@ -397,8 +335,7 @@ export default defineComponent({
             
             
             if (pass){
-                refreshJsonAPI()
-                getReportString()
+                // refreshJsonAPI()
                 classModal.value = false
             }
             
@@ -444,21 +381,16 @@ export default defineComponent({
             quickReport.value = false
         }
 
-        const qReport = index=>{
-            sendAPI(localStorage.getItem('userNum'), quickSet.set[index] + " 無發燒無感冒")
+        const qReport = ()=>{
             selectQuickSet.value = false
         }
      
-
-
 
         onMounted(() => {
             
             const userNumStroge = localStorage.getItem('userNum')
             const classNumStorge = localStorage.getItem('classNum')
             const totalPeopleStorge = localStorage.getItem('totalPeople')
-            
-            
 
             if(classNumStorge === null || totalPeopleStorge === null){
                 classModal.value = true
@@ -480,13 +412,8 @@ export default defineComponent({
                 }
             }
 
-            
-            
             checkTime();
-    
             refreshJsonAPI();
-            getReportString();
-
 
         });
 
@@ -520,12 +447,7 @@ export default defineComponent({
             template,
 
             // API
-            apiUrl,
-            sendAPI,
             refreshJsonAPI,
-            refreshTemplate,
-            getReportString,
-
             checkTime,
             timePeriod,
             options,

@@ -1,7 +1,7 @@
 <template>
   <!-- <div class="copy-btn" @click="copytext"><span>Copy template</span></div> -->
   <div id="report-template">
-    <pre class="preview">{{template}}</pre>
+    <pre class="preview">{{state}}</pre>
   </div>
 </template>
 
@@ -10,7 +10,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "ReportTemplate",
-    props: ['template'],
+    props: ['state'],
     
 });
 </script>
