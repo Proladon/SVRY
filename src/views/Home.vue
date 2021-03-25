@@ -37,6 +37,22 @@
             </splide-slide>
         </splide>
         
+        <!--Demo Modal -->
+        <vue-final-modal v-model="showDemo" classes="modal-container" content-class="modal-content">
+            ⚠ 因涉及個資，不公開實際應用
+            <br>
+            此為純靜態Demo，並無實際串接API
+            <br>
+            本應用使用於軍事訓練役153旅0122梯步3營期間
+            <br>
+            (leon123858 與 Proladon 共同開發)
+            <br>
+            後端API開發文章: <a href="https://ithelp.ithome.com.tw/articles/10254802" target="_blank">
+            文章連結
+            </a>
+            
+        </vue-final-modal>
+
         <!-- Report Modal -->
         <vue-final-modal v-model="showModal" classes="modal-container" content-class="modal-content">
             Report form
@@ -103,7 +119,16 @@
         <!-- Select Quick Set Modal -->
         <vue-final-modal v-model="selectQuickSet" classes="modal-container" content-class="modal-content">
             <div class="quick-set">
-                <p v-for=" index in 5" :key="index" class="quick-set-option" v-show="quickSet.set[index-1] !==''" @click="qReport(index-1)">{{quickSet.set[index-1]}}</p>
+                <p class="quick-set-option" 
+                    v-for=" index in 5" 
+                    :key="index" 
+                    v-show="quickSet.set[index-1] !==''" 
+                    @click="qReport(index-1)"
+                >
+                {{quickSet.set[index-1]}}
+                </p>
+                <p style="font-size: 12px">注意: 快速回報將自動預設無發燒無感冒<br>如有健康狀況請使用一般回報</p>
+                
             </div>
         </vue-final-modal>
         
@@ -137,7 +162,7 @@ export default defineComponent({
     },
 
     setup() {
-
+        const userNum = ref('')
         const classNum = ref('')
         const totalPeople = ref('')
         // Toast Notification init
@@ -152,6 +177,7 @@ export default defineComponent({
         const when = ref("");
 
         // Modal
+        const showDemo = ref(true)
         const showModal = ref(false);
         const timePeriodModal = ref(false);
         const classModal = ref(false);
@@ -159,33 +185,39 @@ export default defineComponent({
         const quickReport = ref(false);
         const selectQuickSet = ref(false);
 
-        // Report
+        // 當前回報資料
         const reportState = reactive({data: demoData});
+        // 當前回報狀況統計
         const info = reactive({
             total: 0,
             reported: 0,
             unreported: 0,
-        });
+        })
+
+        // 健康狀態選項
         const health = reactive({
             fever: false,
             hospital: false,
             getCool: false,
-        });
-
-        // Splide
+        })
+                
+        // 滑動頁面初始頁
+        const slide = ref(0);
+        // 滑動頁面選項設置
         const options = {
             arrows: false,
             pagination: true,
             padding: 0,
             gap: 50,
-        };
+        }
+              
 
-        const slide = ref(0);
-        
+        //:: API Operate
+        // 檢查當前時間，自動選回報時段
         const checkTime = (auto=true) => {
             const now = new Date();
             const hours = now.getHours();
-            const year = date.format(now, "YYYY") - 1911;
+            // const year = date.format(now, "YYYY") - 1911;
 
             if (auto){
                 if (hours >=0 && hours < 12) {
@@ -201,9 +233,8 @@ export default defineComponent({
 
             when.value = `${date.format(now, "M/D")} 兵器連第${classNum.value}班 ${timePeriod.value}回報`
         }
-      
 
-        // API Operate
+        // 刷新 已回報/未回報 統計
         const refreshSate = () => {
             loading.value = true
 
@@ -223,9 +254,9 @@ export default defineComponent({
             }
 
             loading.value = false
-        };
+        }
 
-
+        // 正常回報操作
         const report = () => {
             // get user input
             let tagNum = document.getElementById("tagNum").value;
@@ -296,22 +327,27 @@ export default defineComponent({
         };
         
 
-
+        //:: 對話框
+        // 開啟選擇時段對話窗
         const openTimePeriodModal = ()=>{
             timePeriodModal.value = true
         };
 
+        // 開啟選擇班級對話框
+        const openClassModal = ()=>{
+            classModal.value = true
+        }
+
+        //:: 對話框功能邏輯
+        // 選擇時段
         const chooseTimePeriod = (period)=>{
             timePeriod.value = Number(period)
             checkTime(false)
             timePeriodModal.value = false
             refreshSate()
-        };
-
-        const openClassModal = ()=>{
-            classModal.value = true
         }
 
+        // 選擇班級
         const chooseClass = ()=>{
             const num = document.getElementById('classNum').value
             const people = document.getElementById('people').value
@@ -347,18 +383,8 @@ export default defineComponent({
             
         }
 
-        const changeView = (data) => {
-            slide.value = data._i;
-        };
-
-        const copytext = ()=>{
-            const template = document.getElementsByClassName('preview')[0].innerText
-            copy(template)
-            toast("Copy Done", {
-                type: TYPE.INFO
-            })
-        }
-
+        // 初始化快速回覆選項
+        // 獲取 localStorage Data 並呈現
         const initQuickSet = ()=>{
             const quickSetStorge = JSON.parse(localStorage.getItem('quickReportSet'))
             if(!quickSetStorge){
@@ -369,40 +395,65 @@ export default defineComponent({
                     quickSet.set = quickSetStorge
                 }
             }
-
         }
 
+        // 自訂快速回報
         const setQuickReport = ()=>{
-            
             const setData = {}
             for(let index=0; index<5; index++){
                 const data = document.getElementById(`set_${index}`).value
                 if(data !== ''){
                     setData[index]=data
                 }
-                
             }
+
             localStorage.setItem('quickReportSet', JSON.stringify(setData))
             quickSet.set = setData
 
             quickReport.value = false
         }
 
-        const qReport = ()=>{
+        // 快速回報
+        const qReport = (index)=>{
             selectQuickSet.value = false
+            let tagNum = userNum.value
+            if(tagNum.length === 2){
+                tagNum = '0' + tagNum
+            }else if(tagNum.length === 1){
+                tagNum = '00' + tagNum
+            }
+            reportState.data[`${tagNum} user`] = quickSet.set[index] + " 無發燒無感冒"
+
+            refreshSate()
+        }
+
+        // 滑動視窗的 brfore 事件
+        const changeView = (data) => {
+            slide.value = data._i;
+        }
+
+        // 複製生成模板內容
+        const copytext = ()=>{
+            const template = document.getElementsByClassName('preview')[0].innerText
+            copy(template)
+            toast("Copy Done", {
+                type: TYPE.INFO
+            })
         }
      
 
         onMounted(() => {
-            
+            // 獲取 localStorage Data
             const userNumStroge = localStorage.getItem('userNum')
             const classNumStorge = localStorage.getItem('classNum')
             const totalPeopleStorge = localStorage.getItem('totalPeople')
 
+            // 檢查localStorage Data是否不存在，並將資料註冊到 reactive data
             if(classNumStorge === null || totalPeopleStorge === null){
                 classModal.value = true
             }else{
                 document.getElementById("tagNum").value = userNumStroge
+                userNum.value = userNumStroge
                 classNum.value = classNumStorge
                 totalPeople.value = totalPeopleStorge
             }
@@ -419,13 +470,15 @@ export default defineComponent({
                 }
             }
 
-            checkTime();
-            refreshSate();
+            // 檢查當前時間，並自動挑選回報時段
+            checkTime()
+            refreshSate()
 
         });
 
         return {
             toast,
+            userNum,
             classNum,
             totalPeople,
             loading,
@@ -437,6 +490,7 @@ export default defineComponent({
             
             
             // Modal
+            showDemo,
             showModal,
             timePeriodModal,
             classModal,
@@ -601,6 +655,13 @@ export default defineComponent({
     }
 }
 
+.quick-set{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .quick-set-input{
     height: 30px;
     text-align: center;
@@ -610,9 +671,10 @@ export default defineComponent({
 .quick-set-option{
     width: 12rem;
     overflow: hidden;
-    border: solid 2px cadetblue;
+    background:cadetblue;
     box-sizing: border-box;
-    padding: 5px;
+    padding: 7px;
+    margin: 5px;
     border-radius: 5px;
     text-align: left;
 }
