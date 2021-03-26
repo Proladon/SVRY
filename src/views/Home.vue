@@ -20,7 +20,7 @@
         </div>
         
 
-        <div class="operate-btn refresh-btn" v-show="slide === 1" @click="refreshTemplate"><span>Refresh</span></div>
+        <div class="operate-btn refresh-btn" v-show="slide === 1" @click="getReportString"><span>Refresh</span></div>
         <div class="operate-btn copy-btn" v-show="slide === 1" @click="copytext"><span>Copy template</span></div>
 
         <p class="last-report" v-show="slide === 0">
@@ -142,24 +142,27 @@ export default defineComponent({
     },
 
     setup() {
+        // Toast Notification 初始化
+        const toast = useToast()
+
+        //:: API
         // const apiUrl = ref("http://140.116.183.176:1451/") //成大server
         const apiUrl = ref("http://140.116.183.54:1341/")
         // const apiUrl = ref("https://cors-anywhere.herokuapp.com/http://140.116.183.176:1451/refreshJson")
+
+        //:: LocalStorage
         const classNum = ref('')
         const totalPeople = ref('')
-        // Toast Notification init
-        const toast = useToast();
-
         const quickSet = reactive({
             set:[]
         })
 
-        // Time
+        //:: Time
         const timePeriod = ref("");
         const when = ref("");
         const template = ref("");
 
-        // Modal
+        //:: Modal 對話窗開關
         const showModal = ref(false);
         const timePeriodModal = ref(false);
         const classModal = ref(false);
@@ -167,29 +170,33 @@ export default defineComponent({
         const quickReport = ref(false);
         const selectQuickSet = ref(false);
 
-        // Report
+        //:: 回報狀況
         const reportState = ref(null);
         const info = reactive({
             total: 0,
             reported: 0,
             unreported: 0,
-        });
+        })
+
+        //:: 初始化健康狀況選項
         const health = reactive({
             fever: false,
             hospital: false,
             getCool: false,
-        });
+        })
 
-        // Splide
+        //:: 滑動頁面視窗選項設定
         const options = {
             arrows: false,
             pagination: true,
             padding: 0,
             gap: 50,
-        };
-
+        }
         const slide = ref(0);
         
+
+        //:: 全域功能
+        // 檢查當前時間，自動選擇回報時段
         const checkTime = (auto=true) => {
             const now = new Date();
             const hours = now.getHours();
@@ -208,10 +215,19 @@ export default defineComponent({
             }
 
             when.value = `${year}/${date.format(now, "M/D")} ${timePeriod.value}回報`
-        };
+        }
+
+        // 複製生成模板內容
+        const copytext = ()=>{
+            copy(template.value)
+            toast("Copy Done", {
+                type: TYPE.INFO
+            })
+        }
       
 
-        // API Operate
+        //:: API Operate
+        // 重新獲取Json資料
         const refreshJsonAPI = () => {
             loading.value = true
             axios({
@@ -244,8 +260,9 @@ export default defineComponent({
                     type: TYPE.ERROR,
                 });
             })
-        };
+        }
 
+        // 從API取得生成模板內容
         const getReportString = () => {
             loading.value = true
             axios({
@@ -265,9 +282,9 @@ export default defineComponent({
                     type: TYPE.ERROR,
                 });
             })
-        };
+        }
 
-
+        // 發送API請求 (回報操作)
         const sendAPI = (tagNum, doing) => {
             loading.value = true
             axios({
@@ -294,9 +311,9 @@ export default defineComponent({
                     type: TYPE.ERROR,
                 });
             })
-        };
+        }
 
-
+        // 一般回報操作
         const report = () => {
             // get user input
             let tagNum = document.getElementById("tagNum").value;
@@ -346,28 +363,54 @@ export default defineComponent({
             // Posting API
             sendAPI(tagNum, doing);
             
-        };
-        
-        const refreshTemplate = ()=>{
-            getReportString();
         }
 
+        // 快速回報操作
+        const qReport = index=>{
+            sendAPI(localStorage.getItem('userNum'), quickSet.set[index] + " 無發燒無感冒")
+            selectQuickSet.value = false
+        }
+        
+        
+        //:: Modal 對話窗
+        // 選擇時段對話窗
         const openTimePeriodModal = ()=>{
             timePeriodModal.value = true
-        };
+        }
 
+        // 選擇時段對話窗
         const chooseTimePeriod = (period)=>{
             timePeriod.value = Number(period)
             checkTime(false)
             timePeriodModal.value = false
             refreshJsonAPI()
-            refreshTemplate()
-        };
+            getReportString()
+        }
 
+        // 選擇編輯對話窗
         const openClassModal = ()=>{
             classModal.value = true
         }
 
+        // 設定快速回報選項對話窗
+        const setQuickReport = ()=>{
+            const setData = {}
+            for(let index=0; index<5; index++){
+                const data = document.getElementById(`set_${index}`).value
+                if(data !== ''){
+                    setData[index]=data
+                }
+            }
+            
+            localStorage.setItem('quickReportSet', JSON.stringify(setData))
+            quickSet.set = setData
+
+            quickReport.value = false
+        }
+
+
+        //:: 對話窗功能邏輯
+        // 設定班級
         const chooseClass = ()=>{
             const num = document.getElementById('classNum').value
             const people = document.getElementById('people').value
@@ -404,17 +447,7 @@ export default defineComponent({
             
         }
 
-        const changeView = (data) => {
-            slide.value = data._i;
-        };
-
-        const copytext = ()=>{
-            copy(template.value)
-            toast("Copy Done", {
-                type: TYPE.INFO
-            })
-        }
-
+        // 初始化快速回報選項 (從Localstorage 讀取)
         const initQuickSet = ()=>{
             const quickSetStorge = JSON.parse(localStorage.getItem('quickReportSet'))
             if(!quickSetStorge){
@@ -425,41 +458,23 @@ export default defineComponent({
                     quickSet.set = quickSetStorge
                 }
             }
-
         }
 
-        const setQuickReport = ()=>{
-            
-            const setData = {}
-            for(let index=0; index<5; index++){
-                const data = document.getElementById(`set_${index}`).value
-                if(data !== ''){
-                    setData[index]=data
-                }
-                
-            }
-            localStorage.setItem('quickReportSet', JSON.stringify(setData))
-            quickSet.set = setData
 
-            quickReport.value = false
+        //:: 滑動頁面視窗
+        // 切畫頁面 before 事件
+        const changeView = (data) => {
+            slide.value = data._i;
         }
 
-        const qReport = index=>{
-            sendAPI(localStorage.getItem('userNum'), quickSet.set[index] + " 無發燒無感冒")
-            selectQuickSet.value = false
-        }
-     
 
-
-
+        //:: 頁面載入初始化
         onMounted(() => {
-            
+            // 獲取 Localstrage 資料
             const userNumStroge = localStorage.getItem('userNum')
             const classNumStorge = localStorage.getItem('classNum')
             const totalPeopleStorge = localStorage.getItem('totalPeople')
-            
-            
-
+                       
             if(classNumStorge === null || totalPeopleStorge === null){
                 classModal.value = true
             }else{
@@ -480,15 +495,11 @@ export default defineComponent({
                 }
             }
 
-            
-            
-            checkTime();
-    
-            refreshJsonAPI();
-            getReportString();
-
-
-        });
+            // 檢查當前時間，自動選擇回報時段
+            checkTime()
+            refreshJsonAPI()
+            getReportString()
+        })
 
         return {
             toast,
@@ -500,8 +511,7 @@ export default defineComponent({
             initQuickSet,
             qReport,
             
-            
-            // Modal
+            //:: Modal
             showModal,
             timePeriodModal,
             classModal,
@@ -512,18 +522,17 @@ export default defineComponent({
             quickReport,
             selectQuickSet,
             
-            // Report Info
+            //:: Report Info
             info,
             health,
             report,
             reportState,
             template,
 
-            // API
+            //:: API
             apiUrl,
             sendAPI,
             refreshJsonAPI,
-            refreshTemplate,
             getReportString,
 
             checkTime,
@@ -532,9 +541,9 @@ export default defineComponent({
             changeView,
             slide,
             copytext,
-        };
-    },
-});
+        }
+    }
+})
 </script>
 
 <style lang="scss" scoped>
